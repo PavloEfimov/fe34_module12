@@ -1,0 +1,8 @@
+body {
+    background-color: lime;
+}
+
+.item{
+    background-color: yellow;
+    border: 1px solid red
+}
