@@ -1,3 +1,4 @@
+import { fetchUrls } from './api';
 import gridItemTpl from './item.hbs';
 import * as storage from './storage'
 import "./style.css";
@@ -10,12 +11,9 @@ const persistedUrls = storage.get();
 let urlArray=[];
 let markup;
 
+
 if (persistedUrls){
-    persistedUrls.map((item)=>main.insertAdjacentHTML('afterbegin',gridItemTpl({webURL:item}) +'<br>'));
-    // let q0 = persistedUrls.reduce((markup, item)=>markup+(gridItemTpl({webURL:item}) +'<br>'),'');
-        // console.log('markup', q);
-        // main.innerHTML='';
-        // main.insertAdjacentHTML('afterbegin', q0);
+    persistedUrls.map((item)=>main.insertAdjacentHTML('afterbegin',gridItemTpl({title:item,url:item,image:item,description:item}) +'<br>'));
         urlArray = persistedUrls
     }
 
@@ -27,29 +25,37 @@ main.addEventListener('click', handleBtnDel);
 function handleFormSumit(e){
     e.preventDefault();
 
-    if (urlArray.find((elem)=>elem==input.value)){
+    const pattern = /^(ftp|http|https):\/\/[^ "]+$/;
+    const $value=input.value
+    const result = pattern.test($value)
+    console.log('url',`${result}`);
+    if (!result){
+        alert('введен невалидный url');
+    }
+    else if (urlArray.find((elem)=>elem==input.value)){
         alert('такая закладка уже есть');
     } else {
-        urlArray.push(input.value);
-    main.insertAdjacentHTML('afterbegin',gridItemTpl({webURL:input.value}) +'<br>');
+        fetchUrls({query:input.value}).then(url=>{
+            console.log('api:',url.data)
+            urlArray.push(input.value);
+            main.insertAdjacentHTML('afterbegin',gridItemTpl({title:url.data.title,url:url.data.url,image:url.data.image,description:url.data.description}) +'<br>');
+            input.value='';
+            console.log('after addition of url',urlArray);
+            storage.set(urlArray);
+            console.log('storage content', storage.get());
+});
 }
-    // console.log('grid',gridItemTpl({webURL:input.value}));
-    input.value='';
-    console.log(urlArray);
-    storage.set(urlArray);
+    
 }
 
 function handleBtnDel(e){
     
 if(e.target.className=="buttonDel"){
-    urlArray = urlArray.filter(elem=>elem!==e.target.previousSibling.data.trim())
+    console.log('test_nazva_del', e.target.previousElementSibling.previousElementSibling.innerHTML.trim());
+    urlArray = urlArray.filter(elem=>elem!==e.target.previousElementSibling.previousElementSibling.innerHTML.trim())
     console.log('after delete', urlArray);
     main.innerHTML='';
-    urlArray.map((item)=>main.insertAdjacentHTML('afterbegin',gridItemTpl({webURL:item}) +'<br>'));
-    // let q = urlArray.reduce((markup, item)=>markup+(gridItemTpl({webURL:item}) +'<br>'),'');
-    // console.log('markup', q);
-    
-    // main.insertAdjacentHTML('afterbegin', q);
+    urlArray.map((item)=>main.insertAdjacentHTML('afterbegin',gridItemTpl({title:item,url:item,image:item, description:item}) +'<br>'));
     storage.set(urlArray);
 }
 console.log(e);
